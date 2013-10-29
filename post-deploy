@@ -1,0 +1,16 @@
+#!/bin/bash
+
+set -e
+
+if [ `cat | tar -zt | grep 'V-APP/$' |wc -l` -gt 0 ]; then #check for V-APP file
+  if [ ! -d "$HOME/V-APPS" ]; then    #Create V-APPS directory
+    mkdir -p $HOME/V-APPS;
+  fi
+  
+  if [ ! -f "$HOME/V-APPS/nginx.conf" ]; then
+    touch "$HOME/V-APPS/nginx.conf"
+  fi
+fi
+
+APP="$1"; PORT="$2"
+

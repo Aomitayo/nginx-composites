@@ -1,4 +1,6 @@
 nginx-v-apps
 ============
 
-Dokku plugin for configuring path mounted applications
+Dokku plugin for configuring path-mounted applications
+
+
