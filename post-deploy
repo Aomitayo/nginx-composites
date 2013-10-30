@@ -1,12 +1,14 @@
 #!/bin/bash
 
 set -e
-
+APP="$1"; PORT="$2"
 TMP_ARCHIVE="/tmp/post-deploy.archive.tmp"
-
 if [ -f $TMP_ARCHIVE ]; then rm $TMP_ARCHIVE; fi
 
-if [ `cat | tee $TMP_ARCHIVE | tar -t | grep 'V-APP$' |wc -l` -gt 0 ]; then #check for V-APP file
+cd "$HOME/$APP"
+LAST_COMMIT=$(git log --pretty=oneline -n1| sed -e 's/\s.\+$//g')
+
+if [ `git archive $LAST_COMMIT | tee $TMP_ARCHIVE | tar -t | grep 'V-APP$' |wc -l` -gt 0 ]; then #check for V-APP file
   echo "-----> Mounting V-APP..."
   if [ ! -d "$HOME/V-APPS" ]; then    #Create V-APPS directory
     mkdir -p "$HOME/V-APPS";
@@ -20,7 +22,6 @@ if [ `cat | tee $TMP_ARCHIVE | tar -t | grep 'V-APP$' |wc -l` -gt 0 ]; then #che
   V_APP_NAME=${v_app_config[0]}
   V_APP_MOUNT_POINT=${v_app_config[1]}
   
-  APP="$1"; PORT="$2"
   WILDCARD_SSL="$HOME/ssl"
   SSL="$HOME/V-APPS/ssl"
 
