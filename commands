@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 exec 1>/tmp/v-app.log
 exec 2>/tmp/v-app.log
 
@@ -27,8 +28,8 @@ NGINX_CONF="$VAPPS_DIR/nginx.conf"
 # Prepare VAPPS Dir and nginx.conf
 [ ! - d "$VAPPS_DIR"] || {
   echo "Setting up V-APPS"
-  mkdir -p "$VAPPS_DIR"
-  touch "$NGINX_CONF"
+  sudo mkdir -p "$VAPPS_DIR"
+  sudo touch "$NGINX_CONF"
 }
 
 #Ensure VHOST file exists
@@ -59,7 +60,7 @@ case "$1" in
   v-app:mount)
     # Put server block
     if [[ -n "$SSL_INUSE" ]]; then
-      cat <<EOF>> "$VAPPS_DIR/nginx.conf"
+      sudo cat <<EOF>> "$VAPPS_DIR/nginx.conf"
 server {
   listen      80;
   server_name $hostname;
@@ -81,7 +82,7 @@ server {
 }
 EOF
     else
-    cat <<EOF>> "$VAPPS_DIR/nginx.conf"
+    sudo cat <<EOF>> "$VAPPS_DIR/nginx.conf"
 server {
   listen      80;
   server_name $hostname;
