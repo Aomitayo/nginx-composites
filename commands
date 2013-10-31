@@ -33,13 +33,13 @@ NGINX_CONF="$VAPPS_DIR/nginx.conf"
 }
 
 #Ensure VHOST file exists
-if [[ -f "$HOME/VHOST" ]]; then
+if [[ -f "/home/git/VHOST" ]]; then
   echo "VHOST not configured. Please ensure you configure it"
-  echo "echo <vhost> > $HOME/VHOST"
+  echo "echo <vhost> > /home/git/VHOST"
 fi
 
 
-VHOST=$(< "$HOME/VHOST")
+VHOST=$(< "/home/git/VHOST")
 SUBDOMAIN=${V_APP/%\.${VHOST}/}
 # get hostname
 if [[ "$V_APP" == *.* ]] && [[ "$SUBDOMAIN" == "$V_APP" ]]; then
