@@ -58,6 +58,7 @@ fi
 
 case "$1" in 
   v-app:mount)
+    echo "writing nginx config"
     # Put server block
     if [[ -n "$SSL_INUSE" ]]; then
       sudo cat <<EOF>> "$VAPPS_DIR/nginx.conf"
