@@ -1,4 +1,6 @@
 #!/bin/bash
+exec 1>/tmp/v-app.log
+exec 2>/tmp/v-app.log
 
 #check if command is v-app
 if [[ "$1" != "v-app"]] && [[ $1 != v-app:* ]]; then
