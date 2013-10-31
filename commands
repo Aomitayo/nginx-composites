@@ -61,7 +61,7 @@ case "$1" in
     echo "writing nginx config"
     # Put server block
     if [[ -n "$SSL_INUSE" ]]; then
-      sudo tee "$VAPPS_DIR/nginx.conf" <<EOF 
+      sudo tee -a "$VAPPS_DIR/nginx.conf" <<EOF 
 server {
   listen      80;
   server_name $hostname;
@@ -83,7 +83,7 @@ server {
 }
 EOF
     else
-    sudo tee "$VAPPS_DIR/nginx.conf" <<EOF 
+    sudo tee -a "$VAPPS_DIR/nginx.conf" <<EOF 
 server {
   listen      80;
   server_name $hostname;
