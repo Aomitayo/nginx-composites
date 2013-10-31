@@ -33,7 +33,7 @@ NGINX_CONF="$VAPPS_DIR/nginx.conf"
 }
 
 #Ensure VHOST file exists
-if [[ -f "/home/git/VHOST" ]]; then
+if [[ ! -f "/home/git/VHOST" ]]; then
   echo "VHOST not configured. Please ensure you configure it"
   echo "echo <vhost> > /home/git/VHOST"
 fi
