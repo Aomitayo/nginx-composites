@@ -26,7 +26,7 @@ fi
 VAPPS_DIR="/home/git/V-APPS"
 NGINX_CONF="$VAPPS_DIR/nginx.conf"
 # Prepare VAPPS Dir and nginx.conf
-[ ! - d "$VAPPS_DIR"] || {
+[ ! - d "$VAPPS_DIR" ] || {
   echo "Setting up V-APPS"
   sudo mkdir -p "$VAPPS_DIR"
   sudo touch "$NGINX_CONF"
