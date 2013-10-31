@@ -1,0 +1,102 @@
+#!/bin/bash
+
+#check if command is v-app
+if [[ "$1" != "v-app" && $1 != v-app:* ]]; then
+  exit 1
+fi
+
+# check arguments
+if [[ -z $2 ]] || [[ -z $3 ]] || [[ -z $4 ]]; then
+  echo "usage dokku v-app:mount <v-app> <dest-app> <mount-point>"
+  exit 1
+fi
+V_APP="$2"
+APP="$3"
+MOUNT_POINT="$4"
+
+#check that app exists
+if [[ ! -d "/home/git/$APP" ]]; then
+  echo "App $APP does not exist"
+  exit 1
+fi
+
+VAPPS_DIR="/home/git/V-APPS"
+NGINX_CONF ="$VAPPS_DIR/nginx.conf"
+# Prepare VAPPS Dir and nginx.conf
+[ ! - d "$VAPPS_DIR"] || {
+  echo "Setting up V-APPS"
+  mkdir -p "$VAPPS_DIR";
+  touch "$NGINX_CONF"
+}
+
+#Ensure VHOST file exists
+if [[ -f "$HOME/VHOST" ]]; then
+  echo "VHOST not configured. Please ensure you configure it"
+  echo "echo <vhost> > $HOME/VHOST"
+fi
+
+
+VHOST=$(< "$HOME/VHOST")
+SUBDOMAIN=${V_APP/%\.${VHOST}/}
+# get hostname
+if [[ "$V_APP" == *.* ]] && [[ "$SUBDOMAIN" == "$V_APP" ]]; then
+  hostname="${V_APP/\//-}"
+else
+  hostname="${V_APP/\//-}.$VHOST"
+fi
+
+if [[ -f "$SSL/server.crt" ]] && [[ -f "$SSL/server.key" ]]; then
+  SSL_INUSE="$SSL"
+elif  [[ -f "$WILDCARD_SSL/server.crt" ]] && [[ -f "$WILDCARD_SSL/server.key" ]] && [[ $hostname = `openssl x509 -in $WILDCARD_SSL/server.crt -noout -subject | tr '/' '\n' | grep CN= | cut -c4-` ]]; then
+  SSL_INUSE="$WILDCARD_SSL"
+fi
+
+# Erase server block
+
+case "$1" in 
+  v-app:mount)
+    # Put server block
+    if [[ -n "$SSL_INUSE" ]]; then
+      cat <<EOF>> "$VAPPS_DIR/nginx.conf"
+server {
+  listen      80;
+  server_name $hostname;
+  return 301 https://\$host\$request_uri;
+}
+
+server {
+  listen      443;
+  server_name $hostname;
+
+  ssl on;
+  ssl_certificate     $SSL_INUSE/server.crt;
+  ssl_certificate_key $SSL_INUSE/server.key;
+  ssl_ciphers ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-RC4-SHA:ECDHE-RSA-AES128-SHA:AES128-GCM-SHA256:RC4:HIGH:!MD5:!aNULL:!EDH:!CAMELLIA;
+  ssl_protocols TLSv1.2 TLSv1.1 TLSv1;
+  ssl_prefer_server_ciphers on;
+
+  include /home/git/*/$V_APP.vapp
+}
+EOF
+    else
+    cat <<EOF>> "$VAPPS_DIR/nginx.conf"
+server {
+  listen      80;
+  server_name $hostname;
+
+  ssl on;
+  ssl_certificate     $SSL_INUSE/server.crt;
+  ssl_certificate_key $SSL_INUSE/server.key;
+  ssl_ciphers ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-RC4-SHA:ECDHE-RSA-AES128-SHA:AES128-GCM-SHA256:RC4:HIGH:!MD5:!aNULL:!EDH:!CAMELLIA;
+  ssl_protocols TLSv1.2 TLSv1.1 TLSv1;
+  ssl_prefer_server_ciphers on;
+
+  include /home/git/*/$V_APP.vapp
+}
+EOF
+    fi
+
+esac
+  
+    
+sudo /etc/init.d/nginx reload
