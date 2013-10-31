@@ -21,11 +21,11 @@ if [[ ! -d "/home/git/$APP" ]]; then
 fi
 
 VAPPS_DIR="/home/git/V-APPS"
-NGINX_CONF ="$VAPPS_DIR/nginx.conf"
+NGINX_CONF="$VAPPS_DIR/nginx.conf"
 # Prepare VAPPS Dir and nginx.conf
 [ ! - d "$VAPPS_DIR"] || {
   echo "Setting up V-APPS"
-  mkdir -p "$VAPPS_DIR";
+  mkdir -p "$VAPPS_DIR"
   touch "$NGINX_CONF"
 }
 
