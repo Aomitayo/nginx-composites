@@ -124,8 +124,8 @@ EOF
     MOUNT_POINT="$4"
     COMPOSITE_DIR="/home/git/$COMPOSITE.composite"
     #Create composite if it does not exists
-    if [ ! -f "$COMPOSITE_DIR" ]; then
-      ./$0 composite:create $composite
+    if [ ! -d "$COMPOSITE_DIR" ]; then
+      .$0 composite:create $composite
     fi
 
     #create sub app config
