@@ -28,22 +28,22 @@ case "$1" in
       exit 1
     fi
     #Ensure VHOST file exists
-    if [[ ! -f "/home/git/VHOST" ]]; then
+    if [[ ! -f "$HOME/VHOST" ]]; then
       echo "VHOST not configured. Please ensure you configure it"
-      echo "echo <vhost> > /home/git/VHOST"
+      echo "echo <vhost> > $HOME/VHOST"
       exit 1
     fi
 
     COMPOSITE="$2"
     #Be sure to create Composite app directory and prepare nginx.conf
-    COMPOSITE_DIR="/home/git/$COMPOSITE.composite"
+    COMPOSITE_DIR="$HOME/$COMPOSITE.composite"
     NGINX_CONF="$COMPOSITE_DIR/nginx.conf"
     [ ! -d "$COMPOSITE_DIR" ] || {
-      echo "Setting up composite: $composite"
+      echo "Setting up composite: $COMPOSITE"
       sudo mkdir -p "$COMPOSITE_DIR"
       sudo touch "$NGINX_CONF"
     }
-    VHOST=$(< "/home/git/VHOST")
+    VHOST=$(< "$HOME/VHOST")
     SUBDOMAIN=${COMPOSITE/%\.${VHOST}/}
     # get hostname
     if [[ "$COMPOSITE" == *.* ]] && [[ "$SUBDOMAIN" == "$COMPOSITE" ]]; then
@@ -51,7 +51,10 @@ case "$1" in
     else
       hostname="${COMPOSITE/\//-}.$VHOST"
     fi
-
+    
+    WILDCARD_SSL="$HOME/ssl"
+    SSL="$HOME/$COMPOSITE/ssl"
+    
     if [[ -f "$SSL/server.crt" ]] && [[ -f "$SSL/server.key" ]]; then
       SSL_INUSE="$SSL"
     elif  [[ -f "$WILDCARD_SSL/server.crt" ]] && [[ -f "$WILDCARD_SSL/server.key" ]] && [[ $hostname = `openssl x509 -in $WILDCARD_SSL/server.crt -noout -subject | tr '/' '\n' | grep CN= | cut -c4-` ]]; then
@@ -100,14 +103,14 @@ server {
 EOF
     fi
     ;;
-  composite:create)
+  composite:delete)
     # check arguments
     if [[ -z $2 ]]; then
       echo "usage dokku composite:delete <composite>"
       exit 1
     fi
     COMPOSITE="$2"
-    COMPOSITE_DIR="/home/git/$COMPOSITE.composite"
+    COMPOSITE_DIR="$HOME/$COMPOSITE.composite"
     sudo rm -r $COMPOSITE_DIR
     ;;
   composite:mount)
@@ -119,7 +122,7 @@ EOF
     COMPOSITE="$2"
     APP="$3"
     MOUNT_POINT="$4"
-    COMPOSITE_DIR="/home/git/$COMPOSITE.composite"
+    COMPOSITE_DIR="$HOME/$COMPOSITE.composite"
     #Create composite if it does not exists
     if [ ! -f "$COMPOSITE_DIR" ]; then
       ./$0 composite:create $composite
@@ -141,7 +144,7 @@ EOF
   }
   #end-mount:$MOUNT_POINT
 EOF
-
+    ;;
   composite:unmount)
     # check arguments
     if [[ -z $2 ]] || [[ -z $3 ]] || [[ -z $4 ]]; then
@@ -151,7 +154,7 @@ EOF
     COMPOSITE="$2"
     APP="$3"
     MOUNT_POINT="$4"
-    COMPOSITE_DIR="/home/git/$COMPOSITE.composite"
+    COMPOSITE_DIR="$HOME/$COMPOSITE.composite"
     sed -i -e "'d/#start-mount:$MOUNT_POINT/#end-mount:$MOUNT_POINT'" "$COMPOSITE_DIR/$APP.sub-app.conf"
     ;;
   *)
@@ -159,6 +162,5 @@ EOF
     exit 1
     ;;
 esac
-  
-    
+
 sudo /etc/init.d/nginx reload
