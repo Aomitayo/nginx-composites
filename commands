@@ -28,22 +28,22 @@ case "$1" in
       exit 1
     fi
     #Ensure VHOST file exists
-    if [[ ! -f "$HOME/VHOST" ]]; then
+    if [[ ! -f "/home/git/VHOST" ]]; then
       echo "VHOST not configured. Please ensure you configure it"
-      echo "echo <vhost> > $HOME/VHOST"
+      echo "echo <vhost> > /home/git/VHOST"
       exit 1
     fi
 
     COMPOSITE="$2"
     #Be sure to create Composite app directory and prepare nginx.conf
-    COMPOSITE_DIR="$HOME/$COMPOSITE.composite"
+    COMPOSITE_DIR="/home/git/$COMPOSITE.composite"
     NGINX_CONF="$COMPOSITE_DIR/nginx.conf"
     [ ! -d "$COMPOSITE_DIR" ] || {
       echo "Setting up composite: $COMPOSITE"
       sudo mkdir -p "$COMPOSITE_DIR"
       sudo touch "$NGINX_CONF"
     }
-    VHOST=$(< "$HOME/VHOST")
+    VHOST=$(< "/home/git/VHOST")
     SUBDOMAIN=${COMPOSITE/%\.${VHOST}/}
     # get hostname
     if [[ "$COMPOSITE" == *.* ]] && [[ "$SUBDOMAIN" == "$COMPOSITE" ]]; then
@@ -52,8 +52,8 @@ case "$1" in
       hostname="${COMPOSITE/\//-}.$VHOST"
     fi
     
-    WILDCARD_SSL="$HOME/ssl"
-    SSL="$HOME/$COMPOSITE/ssl"
+    WILDCARD_SSL="/home/git/ssl"
+    SSL="/home/git/$COMPOSITE/ssl"
     
     if [[ -f "$SSL/server.crt" ]] && [[ -f "$SSL/server.key" ]]; then
       SSL_INUSE="$SSL"
@@ -110,7 +110,7 @@ EOF
       exit 1
     fi
     COMPOSITE="$2"
-    COMPOSITE_DIR="$HOME/$COMPOSITE.composite"
+    COMPOSITE_DIR="/home/git/$COMPOSITE.composite"
     sudo rm -r $COMPOSITE_DIR
     ;;
   composite:mount)
@@ -122,7 +122,7 @@ EOF
     COMPOSITE="$2"
     APP="$3"
     MOUNT_POINT="$4"
-    COMPOSITE_DIR="$HOME/$COMPOSITE.composite"
+    COMPOSITE_DIR="/home/git/$COMPOSITE.composite"
     #Create composite if it does not exists
     if [ ! -f "$COMPOSITE_DIR" ]; then
       ./$0 composite:create $composite
@@ -154,7 +154,7 @@ EOF
     COMPOSITE="$2"
     APP="$3"
     MOUNT_POINT="$4"
-    COMPOSITE_DIR="$HOME/$COMPOSITE.composite"
+    COMPOSITE_DIR="/home/git/$COMPOSITE.composite"
     sed -i -e "'d/#start-mount:$MOUNT_POINT/#end-mount:$MOUNT_POINT'" "$COMPOSITE_DIR/$APP.sub-app.conf"
     ;;
   *)
