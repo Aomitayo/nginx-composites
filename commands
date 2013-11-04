@@ -38,7 +38,7 @@ case "$1" in
     #Be sure to create Composite app directory and prepare nginx.conf
     COMPOSITE_DIR="/home/git/$COMPOSITE.composite"
     NGINX_CONF="$COMPOSITE_DIR/nginx.conf"
-    [ ! -d "$COMPOSITE_DIR" ] || {
+    [ -d "$COMPOSITE_DIR" ] || {
       echo "Setting up composite: $COMPOSITE"
       sudo mkdir -p "$COMPOSITE_DIR"
       sudo touch "$NGINX_CONF"
