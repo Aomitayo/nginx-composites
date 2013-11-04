@@ -155,7 +155,9 @@ EOF
     APP="$3"
     MOUNT_POINT="$4"
     COMPOSITE_DIR="/home/git/$COMPOSITE.composite"
-    sed -i -e "'d/#start-mount:$MOUNT_POINT/#end-mount:$MOUNT_POINT'" "$COMPOSITE_DIR/$APP.sub-app.conf"
+    start_pattern="#start-mount:$MOUNT_POINT"
+    end_pattern="#end-mount:$MOUNT_POINT"
+    sudo sed -i -e "/${start_pattern//\//\\/}/,/${end_pattern/\//\\/}/d" "$COMPOSITE_DIR/$APP.sub-app.conf"
     ;;
   *)
     echo "usage dokku composite:<sub-command> [args...]"
