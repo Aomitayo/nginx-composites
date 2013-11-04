@@ -1,67 +1,67 @@
 #!/bin/bash
 set -e
-exec 1>/tmp/v-app.log
-exec 2>/tmp/v-app.log
+exec 1>/tmp/nginx-composite.log
+exec 2>/tmp/nginx-composite.log
 
-#check if command is v-app
-if [[ $1 != v-app ]] && [[ $1 != v-app:* ]]; then
+#check if command is composite
+if [[ $1 != composite ]] && [[ $1 != composite:* ]]; then
   exit 1
-fi
-
-# check arguments
-if [[ -z $2 ]] || [[ -z $3 ]] || [[ -z $4 ]]; then
-  echo "usage dokku v-app:mount <v-app> <dest-app> <mount-point>"
-  exit 1
-fi
-V_APP="$2"
-APP="$3"
-MOUNT_POINT="$4"
-
-#check that app exists
-if [[ ! -d "/home/git/$APP" ]]; then
-  echo "App $APP does not exist"
-  exit 1
-fi
-
-VAPPS_DIR="/home/git/V-APPS"
-NGINX_CONF="$VAPPS_DIR/nginx.conf"
-# Prepare VAPPS Dir and nginx.conf
-[ ! -d "$VAPPS_DIR" ] || {
-  echo "Setting up V-APPS"
-  sudo mkdir -p "$VAPPS_DIR"
-  sudo touch "$NGINX_CONF"
-}
-
-#Ensure VHOST file exists
-if [[ ! -f "/home/git/VHOST" ]]; then
-  echo "VHOST not configured. Please ensure you configure it"
-  echo "echo <vhost> > /home/git/VHOST"
-fi
-
-
-VHOST=$(< "/home/git/VHOST")
-SUBDOMAIN=${V_APP/%\.${VHOST}/}
-# get hostname
-if [[ "$V_APP" == *.* ]] && [[ "$SUBDOMAIN" == "$V_APP" ]]; then
-  hostname="${V_APP/\//-}"
-else
-  hostname="${V_APP/\//-}.$VHOST"
-fi
-
-if [[ -f "$SSL/server.crt" ]] && [[ -f "$SSL/server.key" ]]; then
-  SSL_INUSE="$SSL"
-elif  [[ -f "$WILDCARD_SSL/server.crt" ]] && [[ -f "$WILDCARD_SSL/server.key" ]] && [[ $hostname = `openssl x509 -in $WILDCARD_SSL/server.crt -noout -subject | tr '/' '\n' | grep CN= | cut -c4-` ]]; then
-  SSL_INUSE="$WILDCARD_SSL"
 fi
 
 # Erase server block
+#sed -i -e "'s/server\s*{[^{]*server_name $hostname'[^}]*}//gm" "$COMPOSITE_DIR/nginx.conf"
 
 case "$1" in 
-  v-app:mount)
+
+  composite)
+    #list composites
+    for i in *.composite; do
+      if [ -d $i ]; then
+        echo $i
+      fi
+    done
+    ;;
+  composite:create)
+    # check arguments
+    if [[ -z $2 ]]; then
+      echo "usage dokku composite:create <composite>"
+      exit 1
+    fi
+    #Ensure VHOST file exists
+    if [[ ! -f "/home/git/VHOST" ]]; then
+      echo "VHOST not configured. Please ensure you configure it"
+      echo "echo <vhost> > /home/git/VHOST"
+      exit 1
+    fi
+
+    COMPOSITE="$2"
+    #Be sure to create Composite app directory and prepare nginx.conf
+    COMPOSITE_DIR="/home/git/$COMPOSITE.composite"
+    NGINX_CONF="$COMPOSITE_DIR/nginx.conf"
+    [ ! -d "$COMPOSITE_DIR" ] || {
+      echo "Setting up composite: $composite"
+      sudo mkdir -p "$COMPOSITE_DIR"
+      sudo touch "$NGINX_CONF"
+    }
+    VHOST=$(< "/home/git/VHOST")
+    SUBDOMAIN=${COMPOSITE/%\.${VHOST}/}
+    # get hostname
+    if [[ "$COMPOSITE" == *.* ]] && [[ "$SUBDOMAIN" == "$COMPOSITE" ]]; then
+      hostname="${COMPOSITE/\//-}"
+    else
+      hostname="${COMPOSITE/\//-}.$VHOST"
+    fi
+
+    if [[ -f "$SSL/server.crt" ]] && [[ -f "$SSL/server.key" ]]; then
+      SSL_INUSE="$SSL"
+    elif  [[ -f "$WILDCARD_SSL/server.crt" ]] && [[ -f "$WILDCARD_SSL/server.key" ]] && [[ $hostname = `openssl x509 -in $WILDCARD_SSL/server.crt -noout -subject | tr '/' '\n' | grep CN= | cut -c4-` ]]; then
+      SSL_INUSE="$WILDCARD_SSL"
+    fi
+
     echo "writing nginx config"
     # Put server block
     if [[ -n "$SSL_INUSE" ]]; then
-      sudo tee -a "$VAPPS_DIR/nginx.conf" <<EOF 
+      sudo tee "$COMPOSITE_DIR/nginx.conf" <<EOF 
 server {
   listen      80;
   server_name $hostname;
@@ -78,12 +78,12 @@ server {
   ssl_ciphers ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-RC4-SHA:ECDHE-RSA-AES128-SHA:AES128-GCM-SHA256:RC4:HIGH:!MD5:!aNULL:!EDH:!CAMELLIA;
   ssl_protocols TLSv1.2 TLSv1.1 TLSv1;
   ssl_prefer_server_ciphers on;
-
-  include /home/git/*/$V_APP.vapp
+  
+  include $COMPOSITE_DIR/*.sub-app.conf
 }
 EOF
     else
-    sudo tee -a "$VAPPS_DIR/nginx.conf" <<EOF 
+    sudo tee "$COMPOSITE_DIR/nginx.conf" <<EOF 
 server {
   listen      80;
   server_name $hostname;
@@ -95,11 +95,69 @@ server {
   ssl_protocols TLSv1.2 TLSv1.1 TLSv1;
   ssl_prefer_server_ciphers on;
 
-  include /home/git/*/$V_APP.vapp
+  include $COMPOSITE_DIR/*.sub-app.conf
 }
 EOF
     fi
+    ;;
+  composite:create)
+    # check arguments
+    if [[ -z $2 ]]; then
+      echo "usage dokku composite:delete <composite>"
+      exit 1
+    fi
+    COMPOSITE="$2"
+    COMPOSITE_DIR="/home/git/$COMPOSITE.composite"
+    sudo rm -r $COMPOSITE_DIR
+    ;;
+  composite:mount)
+    # check arguments
+    if [[ -z $2 ]] || [[ -z $3 ]] || [[ -z $4 ]]; then
+      echo "usage dokku composite:mount <composite> <sub-app> <mount-point>"
+      exit 1
+    fi
+    COMPOSITE="$2"
+    APP="$3"
+    MOUNT_POINT="$4"
+    COMPOSITE_DIR="/home/git/$COMPOSITE.composite"
+    #Create composite if it does not exists
+    if [ ! -f "$COMPOSITE_DIR" ]; then
+      ./$0 composite:create $composite
+    fi
 
+    #create sub app config
+    sudo tee -a "$COMPOSITE_DIR/$APP.sub-app.conf" <<EOF
+  #start-mount:$MOUNT_POINT
+  location    $MOUNT_POINT {
+    #proxy_pass  http://127.0.0.1:5000;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade \$http_upgrade;
+    proxy_set_header Connection "upgrade";
+    proxy_set_header Host \$http_host;
+    proxy_set_header X-Forwarded-Proto \$scheme;
+    proxy_set_header X-Forwarded-For \$remote_addr;
+    proxy_set_header X-Forwarded-Port \$server_port;
+    proxy_set_header X-Request-Start \$msec;
+  }
+  #end-mount:$MOUNT_POINT
+EOF
+
+  composite:unmount)
+    # check arguments
+    if [[ -z $2 ]] || [[ -z $3 ]] || [[ -z $4 ]]; then
+      echo "usage dokku composite:unmount <composite> <sub-app> <mount-point>"
+      exit 1
+    fi
+    COMPOSITE="$2"
+    APP="$3"
+    MOUNT_POINT="$4"
+    COMPOSITE_DIR="/home/git/$COMPOSITE.composite"
+    sed -i -e "'d/#start-mount:$MOUNT_POINT/#end-mount:$MOUNT_POINT'" "$COMPOSITE_DIR/$APP.sub-app.conf"
+    ;;
+  *)
+    echo "usage dokku composite:<sub-command> [args...]"
+    exit 1
+    ;;
 esac
   
     
