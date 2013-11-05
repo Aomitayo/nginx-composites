@@ -8,7 +8,7 @@ APP="$1"; PORT="$2"
 # sed -e "s/proxy_pass.*$/proxy_fail http:\/\/127.0.0.1:3000/" bluecorn.composite/bluecorn.sub-app.conf
 cd "/home/git"
 for i in "*/$APP.sub-app.conf"; do
-  if [ -f "$1"]; then
+  if [ -f "$1" ]; then
     sed -e "s/proxy_pass.*$/proxy_pass http:\/\/127.0.0.1:$PORT/" "$1"
   fi
 done
