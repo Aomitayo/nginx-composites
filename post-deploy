@@ -2,12 +2,13 @@
 
 set -e
 exec 1>/tmp/nginx-composite.post-deploy.log
-exec 2>/tmp/nginx-composite.log
+exec 2>/tmp/nginx-composite.post-deploy.log
 
 APP="$1"; PORT="$2"
 # sed -e "s/proxy_pass.*$/proxy_fail http:\/\/127.0.0.1:3000/" bluecorn.composite/bluecorn.sub-app.conf
 cd "/home/git"
-
 for i in "*/$APP.sub-app.conf"; do
-  sed -e "s/proxy_pass.*$/proxy_pass http:\/\/127.0.0.1:$PORT/" $1
+  if [ -f "$1"]; then
+    sed -e "s/proxy_pass.*$/proxy_pass http:\/\/127.0.0.1:$PORT/" "$1"
+  fi
 done
