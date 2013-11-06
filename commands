@@ -7,7 +7,7 @@ exec 2>/tmp/nginx-composite.log
 
 #check if command is composite
 if [[ $1 != composite ]] && [[ $1 != composite:* ]]; then
-  exit 0
+  return
 fi
 
 # Erase server block
