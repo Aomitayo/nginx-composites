@@ -7,9 +7,9 @@ exec 2>/tmp/nginx-composite.post-deploy.log
 
 APP="$1"; PORT="$2"
 # sed -e "s/proxy_pass.*$/proxy_fail http:\/\/127.0.0.1:3000/" bluecorn.composite/bluecorn.sub-app.conf
-cd "/home/git"
+cd "$DOKKU_ROOT"
 for i in "*/$APP.sub-app.conf"; do
   if [ -f "$i" ]; then
-    sed -e "s/proxy_pass.*$/proxy_pass http:\/\/127.0.0.1:$PORT/" "$i"
+    sudo sed -i -e "s/proxy_pass.*$/proxy_pass http:\/\/127.0.0.1:$PORT/" "$i"
   fi
 done

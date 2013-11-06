@@ -155,10 +155,10 @@ EOF
     end_pattern="#end-mount:$MOUNT_POINT"
     sudo sed -i -e "/${start_pattern//\//\\/}/,/${end_pattern/\//\\/}/d" "$COMPOSITE_DIR/$APP.sub-app.conf"
     ;;
-  *)
-    echo "usage dokku composite:<sub-command> [args...]"
-    exit 1
-    ;;
+  # *)
+  #   echo "usage dokku composite:<sub-command> [args...]"
+  #   exit 1
+  #   ;;
 esac
 
 sudo /etc/init.d/nginx reload
