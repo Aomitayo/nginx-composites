@@ -9,9 +9,7 @@ exec 2>/tmp/nginx-composite.log
 if [[ $1 = composite ]] || [[ $1 = composite:* ]]; then
   # Erase server block
   #sed -i -e "'s/server\s*{[^{]*server_name $hostname'[^}]*}//gm" "$COMPOSITE_DIR/nginx.conf"
-
   case "$1" in 
-
     composite)
       #list composites
       cd "$DOKKU_ROOT"
@@ -21,6 +19,7 @@ if [[ $1 = composite ]] || [[ $1 = composite:* ]]; then
         fi
       done
       ;;
+
     composite:create)
       # check arguments
       if [[ -z $2 ]]; then
@@ -96,6 +95,7 @@ server {
 EOF
       fi
       ;;
+
     composite:delete)
       # check arguments
       if [[ -z $2 ]]; then
@@ -106,6 +106,7 @@ EOF
       COMPOSITE_DIR="$DOKKU_ROOT/$COMPOSITE.composite"
       sudo rm -r $COMPOSITE_DIR
       ;;
+
     composite:mount)
       # check arguments
       if [[ -z $2 ]] || [[ -z $3 ]] || [[ -z $4 ]]; then
@@ -138,6 +139,7 @@ EOF
   #end-mount:$MOUNT_POINT
 EOF
       ;;
+
     composite:unmount)
       # check arguments
       if [[ -z $2 ]] || [[ -z $3 ]] || [[ -z $4 ]]; then
@@ -160,3 +162,5 @@ EOF
 
   sudo /etc/init.d/nginx reload
 fi
+
+cat
