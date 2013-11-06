@@ -7,7 +7,7 @@ exec 2>/tmp/nginx-composite.log
 
 #check if command is composite
 if [[ $1 != composite ]] && [[ $1 != composite:* ]]; then
-  exit 1
+  exit 0
 fi
 
 # Erase server block
@@ -155,10 +155,10 @@ EOF
     end_pattern="#end-mount:$MOUNT_POINT"
     sudo sed -i -e "/${start_pattern//\//\\/}/,/${end_pattern/\//\\/}/d" "$COMPOSITE_DIR/$APP.sub-app.conf"
     ;;
-  # *)
-  #   echo "usage dokku composite:<sub-command> [args...]"
-  #   exit 1
-  #   ;;
+  *)
+    echo "usage dokku composite:<sub-command> [args...]"
+    exit 1
+    ;;
 esac
 
 sudo /etc/init.d/nginx reload
