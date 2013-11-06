@@ -2,11 +2,12 @@
 
 set -eo pipefail
 
-#exec 1>/tmp/nginx-composite.log
-exec 2>/tmp/nginx-composite.log
-
 #check if command is composite
 if [[ $1 = composite ]] || [[ $1 = composite:* ]]; then
+  #Redirect stdin & stderr to logs
+  exec 1>/tmp/nginx-composite.log
+  exec 2>/tmp/nginx-composite.log
+
   # Erase server block
   #sed -i -e "'s/server\s*{[^{]*server_name $hostname'[^}]*}//gm" "$COMPOSITE_DIR/nginx.conf"
   case "$1" in 
@@ -159,8 +160,7 @@ EOF
       exit 1
       ;;
   esac
-
   sudo /etc/init.d/nginx reload
+else
+  cat
 fi
-
-cat
