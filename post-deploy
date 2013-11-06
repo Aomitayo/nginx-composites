@@ -7,7 +7,7 @@ set -eo pipefail
 
 APP="$1"; PORT="$2"
 # sed -e "s/proxy_pass.*$/proxy_fail http:\/\/127.0.0.1:3000/" bluecorn.composite/bluecorn.sub-app.conf
-for i in "$DOKKU_ROOT/*/$APP.sub-app.conf"; do
+for i in `ls $DOKKU_ROOT/*/$APP.sub-app.conf`; do
   if [ -f "$i" ]; then
     sudo sed -i -e "s/proxy_pass.*$/proxy_pass http:\/\/127.0.0.1:$PORT/" "$i"
   fi
