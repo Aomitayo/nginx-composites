@@ -6,68 +6,65 @@ exec 1>/tmp/nginx-composite.log
 exec 2>/tmp/nginx-composite.log
 
 #check if command is composite
-if [[ $1 != composite ]] && [[ $1 != composite:* ]]; then
-  return
-fi
+if [[ $1 = composite ]] || [[ $1 = composite:* ]]; then
+  # Erase server block
+  #sed -i -e "'s/server\s*{[^{]*server_name $hostname'[^}]*}//gm" "$COMPOSITE_DIR/nginx.conf"
 
-# Erase server block
-#sed -i -e "'s/server\s*{[^{]*server_name $hostname'[^}]*}//gm" "$COMPOSITE_DIR/nginx.conf"
+  case "$1" in 
 
-case "$1" in 
-
-  composite)
-    #list composites
-    cd "$DOKKU_ROOT"
-    for i in *.composite; do
-      if [ -d $i ]; then
-        echo $i
+    composite)
+      #list composites
+      cd "$DOKKU_ROOT"
+      for i in *.composite; do
+        if [ -d $i ]; then
+          echo $i
+        fi
+      done
+      ;;
+    composite:create)
+      # check arguments
+      if [[ -z $2 ]]; then
+        echo "usage dokku composite:create <composite>"
+        exit 1
       fi
-    done
-    ;;
-  composite:create)
-    # check arguments
-    if [[ -z $2 ]]; then
-      echo "usage dokku composite:create <composite>"
-      exit 1
-    fi
-    #Ensure VHOST file exists
-    if [[ ! -f "$DOKKU_ROOT/VHOST" ]]; then
-      echo "VHOST not configured. Please ensure you configure it"
-      echo "echo <vhost> > $DOKKU_ROOT/VHOST"
-      exit 1
-    fi
+      #Ensure VHOST file exists
+      if [[ ! -f "$DOKKU_ROOT/VHOST" ]]; then
+        echo "VHOST not configured. Please ensure you configure it"
+        echo "echo <vhost> > $DOKKU_ROOT/VHOST"
+        exit 1
+      fi
 
-    COMPOSITE="$2"
-    #Be sure to create Composite app directory and prepare nginx.conf
-    COMPOSITE_DIR="$DOKKU_ROOT/$COMPOSITE.composite"
-    NGINX_CONF="$COMPOSITE_DIR/nginx.conf"
-    [ -d "$COMPOSITE_DIR" ] || {
-      echo "Setting up composite: $COMPOSITE"
-      sudo mkdir -p "$COMPOSITE_DIR"
-      sudo touch "$NGINX_CONF"
-    }
-    VHOST=$(< "$DOKKU_ROOT/VHOST")
-    SUBDOMAIN=${COMPOSITE/%\.${VHOST}/}
-    # get hostname
-    if [[ "$COMPOSITE" == *.* ]] && [[ "$SUBDOMAIN" == "$COMPOSITE" ]]; then
-      hostname="${COMPOSITE/\//-}"
-    else
-      hostname="${COMPOSITE/\//-}.$VHOST"
-    fi
-    
-    WILDCARD_SSL="$DOKKU_ROOT/ssl"
-    SSL="$DOKKU_ROOT/$COMPOSITE/ssl"
-    
-    if [[ -f "$SSL/server.crt" ]] && [[ -f "$SSL/server.key" ]]; then
-      SSL_INUSE="$SSL"
-    elif  [[ -f "$WILDCARD_SSL/server.crt" ]] && [[ -f "$WILDCARD_SSL/server.key" ]] && [[ $hostname = `openssl x509 -in $WILDCARD_SSL/server.crt -noout -subject | tr '/' '\n' | grep CN= | cut -c4-` ]]; then
-      SSL_INUSE="$WILDCARD_SSL"
-    fi
+      COMPOSITE="$2"
+      #Be sure to create Composite app directory and prepare nginx.conf
+      COMPOSITE_DIR="$DOKKU_ROOT/$COMPOSITE.composite"
+      NGINX_CONF="$COMPOSITE_DIR/nginx.conf"
+      [ -d "$COMPOSITE_DIR" ] || {
+        echo "Setting up composite: $COMPOSITE"
+        sudo mkdir -p "$COMPOSITE_DIR"
+        sudo touch "$NGINX_CONF"
+      }
+      VHOST=$(< "$DOKKU_ROOT/VHOST")
+      SUBDOMAIN=${COMPOSITE/%\.${VHOST}/}
+      # get hostname
+      if [[ "$COMPOSITE" == *.* ]] && [[ "$SUBDOMAIN" == "$COMPOSITE" ]]; then
+        hostname="${COMPOSITE/\//-}"
+      else
+        hostname="${COMPOSITE/\//-}.$VHOST"
+      fi
+      
+      WILDCARD_SSL="$DOKKU_ROOT/ssl"
+      SSL="$DOKKU_ROOT/$COMPOSITE/ssl"
+      
+      if [[ -f "$SSL/server.crt" ]] && [[ -f "$SSL/server.key" ]]; then
+        SSL_INUSE="$SSL"
+      elif  [[ -f "$WILDCARD_SSL/server.crt" ]] && [[ -f "$WILDCARD_SSL/server.key" ]] && [[ $hostname = `openssl x509 -in $WILDCARD_SSL/server.crt -noout -subject | tr '/' '\n' | grep CN= | cut -c4-` ]]; then
+        SSL_INUSE="$WILDCARD_SSL"
+      fi
 
-    echo "writing nginx config"
-    # Put server block
-    if [[ -n "$SSL_INUSE" ]]; then
-      sudo tee "$COMPOSITE_DIR/nginx.conf" <<EOF 
+      echo "writing nginx config"
+      # Put server block
+      if [[ -n "$SSL_INUSE" ]]; then
+        sudo tee "$COMPOSITE_DIR/nginx.conf" <<EOF 
 server {
   listen      80;
   server_name $hostname;
@@ -88,8 +85,8 @@ server {
   include $COMPOSITE_DIR/*.sub-app.conf
 }
 EOF
-    else
-    sudo tee "$COMPOSITE_DIR/nginx.conf" <<EOF 
+      else
+      sudo tee "$COMPOSITE_DIR/nginx.conf" <<EOF 
 server {
   listen      80;
   server_name $hostname;
@@ -97,35 +94,35 @@ server {
   include $COMPOSITE_DIR/*.sub-app.conf
 }
 EOF
-    fi
-    ;;
-  composite:delete)
-    # check arguments
-    if [[ -z $2 ]]; then
-      echo "usage dokku composite:delete <composite>"
-      exit 1
-    fi
-    COMPOSITE="$2"
-    COMPOSITE_DIR="$DOKKU_ROOT/$COMPOSITE.composite"
-    sudo rm -r $COMPOSITE_DIR
-    ;;
-  composite:mount)
-    # check arguments
-    if [[ -z $2 ]] || [[ -z $3 ]] || [[ -z $4 ]]; then
-      echo "usage dokku composite:mount <composite> <sub-app> <mount-point>"
-      exit 1
-    fi
-    COMPOSITE="$2"
-    APP="$3"
-    MOUNT_POINT="$4"
-    COMPOSITE_DIR="$DOKKU_ROOT/$COMPOSITE.composite"
-    #Create composite if it does not exists
-    if [ ! -d "$COMPOSITE_DIR" ]; then
-      $0 composite:create $COMPOSITE
-    fi
+      fi
+      ;;
+    composite:delete)
+      # check arguments
+      if [[ -z $2 ]]; then
+        echo "usage dokku composite:delete <composite>"
+        exit 1
+      fi
+      COMPOSITE="$2"
+      COMPOSITE_DIR="$DOKKU_ROOT/$COMPOSITE.composite"
+      sudo rm -r $COMPOSITE_DIR
+      ;;
+    composite:mount)
+      # check arguments
+      if [[ -z $2 ]] || [[ -z $3 ]] || [[ -z $4 ]]; then
+        echo "usage dokku composite:mount <composite> <sub-app> <mount-point>"
+        exit 1
+      fi
+      COMPOSITE="$2"
+      APP="$3"
+      MOUNT_POINT="$4"
+      COMPOSITE_DIR="$DOKKU_ROOT/$COMPOSITE.composite"
+      #Create composite if it does not exists
+      if [ ! -d "$COMPOSITE_DIR" ]; then
+        $0 composite:create $COMPOSITE
+      fi
 
-    #create sub app config
-    sudo tee -a "$COMPOSITE_DIR/$APP.sub-app.conf" <<EOF
+      #create sub app config
+      sudo tee -a "$COMPOSITE_DIR/$APP.sub-app.conf" <<EOF
   #start-mount:$MOUNT_POINT
   location    $MOUNT_POINT {
     proxy_pass  http://127.0.0.1:5000;
@@ -140,25 +137,26 @@ EOF
   }
   #end-mount:$MOUNT_POINT
 EOF
-    ;;
-  composite:unmount)
-    # check arguments
-    if [[ -z $2 ]] || [[ -z $3 ]] || [[ -z $4 ]]; then
-      echo "usage dokku composite:unmount <composite> <sub-app> <mount-point>"
+      ;;
+    composite:unmount)
+      # check arguments
+      if [[ -z $2 ]] || [[ -z $3 ]] || [[ -z $4 ]]; then
+        echo "usage dokku composite:unmount <composite> <sub-app> <mount-point>"
+        exit 1
+      fi
+      COMPOSITE="$2"
+      APP="$3"
+      MOUNT_POINT="$4"
+      COMPOSITE_DIR="$DOKKU_ROOT/$COMPOSITE.composite"
+      start_pattern="#start-mount:$MOUNT_POINT"
+      end_pattern="#end-mount:$MOUNT_POINT"
+      sudo sed -i -e "/${start_pattern//\//\\/}/,/${end_pattern/\//\\/}/d" "$COMPOSITE_DIR/$APP.sub-app.conf"
+      ;;
+    *)
+      echo "usage dokku composite:<sub-command> [args...]"
       exit 1
-    fi
-    COMPOSITE="$2"
-    APP="$3"
-    MOUNT_POINT="$4"
-    COMPOSITE_DIR="$DOKKU_ROOT/$COMPOSITE.composite"
-    start_pattern="#start-mount:$MOUNT_POINT"
-    end_pattern="#end-mount:$MOUNT_POINT"
-    sudo sed -i -e "/${start_pattern//\//\\/}/,/${end_pattern/\//\\/}/d" "$COMPOSITE_DIR/$APP.sub-app.conf"
-    ;;
-  *)
-    echo "usage dokku composite:<sub-command> [args...]"
-    exit 1
-    ;;
-esac
+      ;;
+  esac
 
-sudo /etc/init.d/nginx reload
+  sudo /etc/init.d/nginx reload
+fi
