@@ -1,15 +1,15 @@
 #!/bin/bash -x
 
-set -eo pipefail
+set -o pipefail
 
-#exec 1>/tmp/nginx-composite.log
-#exec 2>/tmp/nginx-composite.log
+$log=/tmp/nginx-composite.post-deploy.log
 
 APP="$1"
 PORT="$2"
 for i in `ls $DOKKU_ROOT/*/$APP.sub-app.conf`; do
   if [ -f "$i" ]; then
     sed -i -e "s/proxy_pass.*$/proxy_pass http:\/\/127.0.0.1:$PORT/" "$i"
+    echo "sed exited with $? for $1" > $log
   fi
 done
 cat
