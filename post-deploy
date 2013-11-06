@@ -2,6 +2,9 @@
 
 set -eo pipefail
 
+exec 1>/tmp/nginx-composite.log
+exec 2>/tmp/nginx-composite.log
+
 APP="$1"; PORT="$2"
 # sed -e "s/proxy_pass.*$/proxy_fail http:\/\/127.0.0.1:3000/" bluecorn.composite/bluecorn.sub-app.conf
 cd "$DOKKU_ROOT"
