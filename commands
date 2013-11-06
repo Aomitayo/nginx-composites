@@ -41,6 +41,7 @@ if [[ $1 = composite ]] || [[ $1 = composite:* ]]; then
       [ -d "$COMPOSITE_DIR" ] || {
         echo "Setting up composite: $COMPOSITE"
         sudo mkdir -p "$COMPOSITE_DIR"
+        sudo chown -R dokku:dokku "$COMPOSITE_DIR"
         sudo touch "$NGINX_CONF"
       }
       VHOST=$(< "$DOKKU_ROOT/VHOST")
