@@ -12,3 +12,5 @@ for i in "$DOKKU_ROOT/*/$APP.sub-app.conf"; do
     sudo sed -i -e "s/proxy_pass.*$/proxy_pass http:\/\/127.0.0.1:$PORT/" "$i"
   fi
 done
+
+cat
