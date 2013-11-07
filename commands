@@ -83,7 +83,7 @@ server {
   ssl_protocols TLSv1.2 TLSv1.1 TLSv1;
   ssl_prefer_server_ciphers on;
   
-  include $COMPOSITE_DIR/*.sub-app.conf
+  include $COMPOSITE_DIR/*.sub-app.conf;
 }
 EOF
       else
@@ -92,7 +92,7 @@ server {
   listen      80;
   server_name $hostname;
 
-  include $COMPOSITE_DIR/*.sub-app.conf
+  include $COMPOSITE_DIR/*.sub-app.conf;
 }
 EOF
       fi
