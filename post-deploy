@@ -6,7 +6,7 @@ APP="$1"
 PORT="$2"
 for i in `ls $DOKKU_ROOT/*/$APP.sub-app.conf`; do
   if [ -f "$i" ]; then
-    sed -i -e "s/proxy_pass.*$/proxy_pass http:\/\/127.0.0.1:$PORT;/" "$i"
+    sed -i -e "s/proxy_pass.*$/proxy_pass http:\/\/127.0.0.1:$PORT\/;/" "$i"
   fi
 done
 cat
