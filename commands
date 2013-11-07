@@ -163,8 +163,8 @@ EOF
       end_pattern="#end-mount:$MOUNT_POINT"
       sudo sed -i -e "/${start_pattern//\//\\/}/,/${end_pattern/\//\\/}/d" "$COMPOSITE_DIR/$APP.sub-app.conf"
       #remove the file if it is now empty
-      if [ -s "$COMPOSITE_DIR/$APP.sub-app.conf" ]; then
-        sudo rm "$COMPOSITE_DIR/$APP.sub-app.conf";
+      if [[ -f "$COMPOSITE_DIR/$APP.sub-app.conf" ]] && [[ ! -s "$COMPOSITE_DIR/$APP.sub-app.conf" ]]; then
+        sudo rm "$COMPOSITE_DIR/$APP.sub-app.conf"
       fi
       ;;
     *)
