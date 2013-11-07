@@ -123,7 +123,10 @@ EOF
       if [ ! -d "$COMPOSITE_DIR" ]; then
         $0 composite:create $COMPOSITE
       fi
-
+      #unmount if already mounted
+      if [ -f "$COMPOSITE_DIR/$APP.sub-app.conf" ]; then
+        $0 composite:unmount $COMPOSITE $APP $MOUNT_POINT
+      fi
       #create sub app config
       sudo tee -a "$COMPOSITE_DIR/$APP.sub-app.conf" <<EOF
   #start-mount:$MOUNT_POINT
@@ -159,6 +162,10 @@ EOF
       start_pattern="#start-mount:$MOUNT_POINT"
       end_pattern="#end-mount:$MOUNT_POINT"
       sudo sed -i -e "/${start_pattern//\//\\/}/,/${end_pattern/\//\\/}/d" "$COMPOSITE_DIR/$APP.sub-app.conf"
+      #remove the file if it is now empty
+      if [ -s "$COMPOSITE_DIR/$APP.sub-app.conf" ]; then
+        sudo rm "$COMPOSITE_DIR/$APP.sub-app.conf";
+      fi
       ;;
     *)
       echo "usage dokku composite:<sub-command> [args...]"
